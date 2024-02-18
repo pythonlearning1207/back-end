@@ -21,10 +21,32 @@ app.get('/jokes/:id', (req, res)=>{
   const id = parseInt(req.params.id);
   const foundJoke = jokes.find((joke)=> joke.id===id);
   res.json(foundJoke);
+  // let foundJoke;
+  // for (let i = 0; i < jokes.length; i++) {
+  //   if (jokes[i].id === id) {
+  //     foundJoke = jokes[i];
+  //   }
+  // }
+  // res.json(foundJoke);
 })
 
 //3. GET a jokes by filtering on the joke type
-
+app.get('/filter', (req, res)=> {
+  const type = req.query.type;
+  let matchedJokes = [];
+  //My version
+  // for (let i = 0; i < jokes.length; i++) {
+  //   if (jokes[i].jokeType === type) {
+  //     matchedJokes.push(jokes[i]);
+  //   }
+  // }
+  matchedJokes = jokes.filter((joke)=> joke.jokeType === type);
+  if (matchedJokes.length > 0) {
+    res.json(matchedJokes);
+  } else {
+    res.status(404).send('No matched joke type found');
+  }
+})
 //4. POST a new joke
 
 //5. PUT a joke
