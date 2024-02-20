@@ -131,13 +131,25 @@ app.delete('/jokes/:id', (req, res)=> {
 })
 
 //8. DELETE All jokes
-app.delete('/jokes/all', (req, res)=> {
-  const APIKey = 123123;
-  if (req.header.authorization.value === APIKey) {
+app.delete('/all', (req, res)=> {
+  const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
+  //using Query
+  //   const userKey = req.query.key;  //using query here for Query instead of params
+//   if (userKey === masterKey) {
+//     jokes = [];
+//     res.sendStatus(200);
+//   } else {
+//     res.send("Invalid APIKey");
+//   }
+  //use Headers
+  const userKey = req.headers.key;
+  if (userKey === masterKey) {
     jokes = [];
-    res.send("OK");
+    res.sendStatus(200);
   } else {
-    res.send("Invalid APIKey");
+    res
+      .status(404)
+      .json('invalid APIKey.');
   }
 })
 
