@@ -67,6 +67,7 @@ app.post("/posts", (req, res) => {
     author: req.body.author,
     date: new Date(),
   }
+  lastId = id;
   posts.push(post);
   res.json(posts[-1]);
 })
