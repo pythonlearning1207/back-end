@@ -61,47 +61,73 @@ app.post('/jokes', (req, res)=>{
 //5. PUT a joke
 app.put('/jokes/:id', (req, res)=>{
   const id = parseInt(req.params.id);
-  try {
-    let foundJoke = jokes.find((joke)=> joke.id === id);
-    foundJoke.jokeText = req.body.text;
-    foundJoke.jokeType = req.body.type;
-    res.json(foundJoke);  
-  } catch (error) {
-    res.status(404).send("No matched id found");
+  const newJoke = {
+    id: id,
+    jokeText: req.body.text,
+    jokeType: req.body.type,
   }
-  
+  try {
+    const searchIndex = jokes.findIndex((joke)=> joke.id === id);
+    jokes[searchIndex] = newJoke;
+    res.send(jokes[searchIndex]);
+  } catch (error) {
+    res.status(404).send("No matched joke found");
+  }
 })
 
 //6. PATCH a joke
 app.patch('/jokes/:id', (req, res)=> {
   const searchedId = parseInt(req.params.id);
+  // try {
+  //   const foundJoke = jokes.find((joke)=> joke.id === searchedId);  
+  //   if (req.body.text) {
+  //     foundJoke.jokeText = req.body.text;  
+  //   }
+  //   if (req.body.type) {
+  //     foundJoke.jokeType = req.body.type;  
+  //   }
+  //   res.json(foundJoke);
+  // } catch (error) {
+  //   res.status(404).send("No matched id found");
+  // }
   try {
-    const foundJoke = jokes.find((joke)=> joke.id === searchedId);  
-    if (req.body.text) {
-      foundJoke.jokeText = req.body.text;  
+    const existingJoke = jokes.find((joke)=> joke.id === searchedId);
+    const searchIndex = jokes.findIndex((joke)=> joke.id === searchedId);
+    const newJoke = {
+      id: searchedId,
+      jokeText: req.body.text || existingJoke.jokeText,
+      jokeType: req.body.type || existingJoke.jokeType,
     }
-    if (req.body.type) {
-      foundJoke.jokeType = req.body.type;  
-    }
-    res.json(foundJoke);
+    jokes[searchIndex] = newJoke;
+    console.log(jokes[searchIndex]);
+    res.json(newJoke);  
   } catch (error) {
-    res.status(404).send("No matched id found");
+    res.status(400).send("No found id");
   }
   
 })
 //7. DELETE Specific joke
 app.delete('/jokes/:id', (req, res)=> {
-  // console.log(typeof(jokes[0].id));
-  const searchedId = parseInt(req.params.id);
-  // console.log(typeof(searchedId));
-  const oriLength = jokes.length;
-  jokes = jokes.filter((joke)=> joke.id !== searchedId);
-  if (jokes.length < oriLength) {
-    res.send('OK');
+  // const searchedId = parseInt(req.params.id);
+  // const oriLength = jokes.length;
+  // jokes = jokes.filter((joke)=> joke.id !== searchedId);
+  // if (jokes.length < oriLength) {
+  //   res.send('OK');
+  // } else {
+  //   res.status(404).send("No matched id found");
+  // }
+  const id = parseInt(req.params.id);
+  const searchIndex = jokes.findIndex((joke)=> joke.id === id);
+  if (searchIndex !== -1) {
+    jokes.splice(searchIndex, 1);
+    console.log("joke " + id +  " deleted");
+    res.sendStatus(200);
   } else {
-    res.status(404).send("No matched id found");
+    console.log(`joke not found`);
+    res.status(404).send(`joke not found`);
   }
-
+  
+  
 })
 
 //8. DELETE All jokes
