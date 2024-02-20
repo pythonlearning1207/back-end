@@ -48,14 +48,72 @@ app.get('/filter', (req, res)=> {
   }
 })
 //4. POST a new joke
-
+app.post('/jokes', (req, res)=>{
+  const newJoke = {
+    id: jokes.length + 1,
+    jokeText: req.body.text,
+    jokeType: req.body.type,
+  }
+  jokes.push(newJoke);
+  console.log(jokes.slice(-1));
+  res.json(newJoke);
+})
 //5. PUT a joke
+app.put('/jokes/:id', (req, res)=>{
+  const id = parseInt(req.params.id);
+  try {
+    let foundJoke = jokes.find((joke)=> joke.id === id);
+    foundJoke.jokeText = req.body.text;
+    foundJoke.jokeType = req.body.type;
+    res.json(foundJoke);  
+  } catch (error) {
+    res.status(404).send("No matched id found");
+  }
+  
+})
 
 //6. PATCH a joke
-
+app.patch('/jokes/:id', (req, res)=> {
+  const searchedId = parseInt(req.params.id);
+  try {
+    const foundJoke = jokes.find((joke)=> joke.id === searchedId);  
+    if (req.body.text) {
+      foundJoke.jokeText = req.body.text;  
+    }
+    if (req.body.type) {
+      foundJoke.jokeType = req.body.type;  
+    }
+    res.json(foundJoke);
+  } catch (error) {
+    res.status(404).send("No matched id found");
+  }
+  
+})
 //7. DELETE Specific joke
+app.delete('/jokes/:id', (req, res)=> {
+  // console.log(typeof(jokes[0].id));
+  const searchedId = parseInt(req.params.id);
+  // console.log(typeof(searchedId));
+  const oriLength = jokes.length;
+  jokes = jokes.filter((joke)=> joke.id !== searchedId);
+  if (jokes.length < oriLength) {
+    res.send('OK');
+  } else {
+    res.status(404).send("No matched id found");
+  }
+
+})
 
 //8. DELETE All jokes
+app.delete('/jokes/all', (req, res)=> {
+  const APIKey = 123123;
+  if (req.header.authorization.value === APIKey) {
+    jokes = [];
+    res.send("OK");
+  } else {
+    res.send("Invalid APIKey");
+  }
+})
 
 app.listen(port, () => {
   console.log(`Successfully started server on port ${port}.`);
