@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 
 const app = express();
 const port = 4000;
-app.use(express.static("public"));
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
@@ -35,7 +35,7 @@ const masterKey = "10172023";
 
 //get all
 app.get("/posts", (req, res) => {
-    res.status(200).json(posts)
+    res.status(200).json(posts);
 })
 //get specific one
 app.get("/posts/:id", (req, res) => {
