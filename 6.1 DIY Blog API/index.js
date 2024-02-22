@@ -70,7 +70,7 @@ app.put("/posts/:id", (req, res) => {
             author: req.body.author,
             date: new Date(),
         }
-        res.status(200).json(posts);
+        res.status(200).json(posts[index]);
     } else {
         res.status(404).json( { Message: "No matched post found"});
     }

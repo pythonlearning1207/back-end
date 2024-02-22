@@ -6,11 +6,16 @@
     <title>Document</title>
 </head>
 <body>
+    <a href="/new">New</a>
     <% posts.forEach(post=> { %>
         <h2> <%= post.title %> </h2>
         <p> <%= post.date %> </p>
         <h3> <%= post.content %> </h3>
         <p> <%= post.author %> </p>
+        <a href="/edit/<%= post.id %>">edit</a>
+        <a href="/delete/<%= post.id %>">delete></a>
     <%}); %>
+    <br><br>
+    <a href="api/delete/all">delete all</a>
 </body>
 </html>
