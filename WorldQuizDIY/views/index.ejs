@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body id="app">
+    <form class="container" action="/submit" method="post" >
+        <div class="horizontal-container">
+            <h3>total Score: 
+                <% if (locals.totalScore) { %>
+                    <span><%= totalScore %></span>    
+                <%} else { %>
+                    <span>0</span>
+                <%} %>
+            </h3>
+        </div>
+        <div>
+            <% if (locals.currentQuiz) { %>
+                <h2><%= currentQuiz.country %></h2>
+                <input type="text" placeholder="Enter the capital" name="answer" autofocus autocomplete="off">
+            <%} %>
+        </div>
+        <div>
+            <button type="submit">SUBMIT</button>
+        </div>
+
+    </form>
+    <script>
+        var wasCorrect = "<%= locals.wasCorrect %>";
+        if (wasCorrect === "false") {
+            alert("game over! your highest score: <%=locals.totalScore %>")
+            document.getElementById("app").innerHTML = '<a href="/">Retry</a>';
+        }
+    </script>
+</body>
+</html>
