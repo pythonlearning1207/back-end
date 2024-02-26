@@ -12,7 +12,7 @@ const db = new pg.Client({
   port: 5432,
 }) 
 db.connect();
-db.query("SELECT* FROM flags", (err, res) =>{
+db.query("SELECT* FROM flags WHERE LIKE 'a"||'%', (err, res) =>{
   if (err) {
     console.err("error: " + err.stack);
   } else {
