@@ -16,9 +16,9 @@ const db = new pg.Client({
 db.connect();
 //checkVisited()
 async function checkVisited(){
-    let result = db.query("SELECT countries_code FROM visited_countries");
+    let result = await db.query("SELECT countries_code FROM visited_countries");
     result = result.rows;
-    let newArr;
+    let newArr= [];
     result.forEach(country =>{
         newArr.push(country.countries_code);
     })
@@ -36,25 +36,24 @@ app.get("/", async(req, res)=>{
 app.post("/add", async(req, res)=>{
     let usersubmit = req.body.country;
     try {
-        let result = await db.query("SELECT countries_code FROM countries WHERE LOWER(countries_name) LIKE '%'||$1||'%');", [usersubmit].toLowerCase());
+        let result = await db.query(
+            "SELECT countries_code FROM countries WHERE LOWER(countries_name) LIKE '%' || $1 || '%');", [usersubmit].toLowerCase());
         result = result.rows[0].countries_code;
         try {
-            let insertResult = db.query("INSERT INTO visited_countries(country_code) VALUES($1);", [result]);
-            let data = checkVisited();
-            res.render("index.ejs", {
-                total:data.length,
-                countries: data,
-            })
-        } catch (error) {
-            let data = checkVisited();
+            let insertResult = await db.query(
+                "INSERT INTO visited_countries(country_code) VALUES($1);", [result]);
+            res.redirect("/");
+    
+        } catch (err) {
+            let data = await checkVisited();
             res.render("index.ejs",{
                 total: data.length,
                 countries: data,
-                error: "Country already added."
+                error: "Country has already been added."
             })
         }
-    } catch (error) {
-        let data = checkVisited();
+    } catch (err) {
+        let data = await checkVisited();
         res.render("index.ejs", {
             total: data.length,
             countries: data,
