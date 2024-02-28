@@ -16,17 +16,18 @@ const db = new pg.Client({
 db.connect();
 //checkVisited()
 async function checkVisited(){
-    let result = await db.query("SELECT countries_code FROM visited_countries");
+    let result = await db.query("SELECT country_code FROM visited_countries;");
     result = result.rows;
     let newArr= [];
     result.forEach(country =>{
-        newArr.push(country.countries_code);
+        newArr.push(country.country_code);
     })
     return newArr;
 }
 //get '/'
 app.get("/", async(req, res)=>{
     let result = await checkVisited();
+    console.log(result);
     res.render("index.ejs",{
         total: result.length,
         countries: result,
@@ -35,17 +36,20 @@ app.get("/", async(req, res)=>{
 //post add
 app.post("/add", async(req, res)=>{
     let usersubmit = req.body.country;
+    console.log(usersubmit);
     try {
-        let result = await db.query(
-            "SELECT countries_code FROM countries WHERE LOWER(countries_name) LIKE '%' || $1 || '%');", [usersubmit].toLowerCase());
-        result = result.rows[0].countries_code;
+        const result = await db.query("SELECT country_code FROM countries WHERE LOWER(country_name) LIKE '%' || $1 || '%';", [usersubmit.toLowerCase()]);
+        const data = result.rows[0];
+        const countryCode = data.country_code;
+        console.log(countryCode);
         try {
-            let insertResult = await db.query(
-                "INSERT INTO visited_countries(country_code) VALUES($1);", [result]);
+            await db.query(
+                "INSERT INTO visited_countries(country_code) VALUES($1);", [countryCode]);
             res.redirect("/");
     
         } catch (err) {
-            let data = await checkVisited();
+            console.log(err);
+            const data = await checkVisited();
             res.render("index.ejs",{
                 total: data.length,
                 countries: data,
@@ -53,11 +57,12 @@ app.post("/add", async(req, res)=>{
             })
         }
     } catch (err) {
-        let data = await checkVisited();
+        console.log(err);
+        const data = await checkVisited();
         res.render("index.ejs", {
             total: data.length,
             countries: data,
-            error: "Cant't find the country you entered. Please try agian",
+            error: "Country name does not exist, try again.",
         })
     }
 })
