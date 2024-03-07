@@ -23,9 +23,12 @@ let users = [
   { id: 1, name: "Angela", color: "teal" },
   { id: 2, name: "Jack", color: "powderblue" },
 ];
-
-
-
+// refresh users[]
+async function getCurrentUsers() {
+  const result = await db.query("SELECT * FROM users");
+  users = result.rows;
+}
+// checkVisited()
 async function checkVisited(user_id) {
   const result = await db.query(
     "SELECT country_code FROM visited_countries WHERE user_id=$1",
@@ -37,67 +40,115 @@ async function checkVisited(user_id) {
   });
   return countries;
 }
+//check color()
+async function checkColor(currentUserId){
+  const result = await db.query(
+    "SELECT color FROM users WHERE id=$1",
+    [currentUserId]);
+  const data = result.rows;
+  const color = data[0].color;
+  return color;
+}
+
+// main
 app.get("/", async (req, res) => {
-  const countries = await checkVisited(1);
+  await getCurrentUsers();
+  const countries = await checkVisited(currentUserId);
+  const color = await checkColor(currentUserId);
   res.render("index.ejs", {
     countries: countries,
     total: countries.length,
     users: users,
-    color: "teal",
+    color: color,
   });
 });
+// /add country
 app.post("/add", async (req, res) => {
-  const input = req.body["country"];
-
+  if (req.body.country === '') {
+    res.redirect('/');
+  } else {
+    const input = req.body["country"];
+     const userId = currentUserId;
   try {
     const result = await db.query(
       "SELECT country_code FROM countries WHERE LOWER(country_name) LIKE '%' || $1 || '%';",
       [input.toLowerCase()]
     );
-
     const data = result.rows[0];
     const countryCode = data.country_code;
+
     try {
       await db.query(
-        "INSERT INTO visited_countries (country_code) VALUES ($1)",
-        [countryCode]
+        "INSERT INTO visited_countries (country_code, user_id) VALUES ($1, $2)",
+        [countryCode, userId]
       );
       res.redirect("/");
     } catch (err) {
-      console.log(err);
+      const countries = await checkVisited(currentUserId);
+      const color = await checkColor(currentUserId);
+      res.render("index.ejs", {
+        users: users,
+        total: countries.length,
+        countries: countries,
+        color: color,
+        error: "Country has been added already.",
+      })
     }
   } catch (err) {
+    const countries = await checkVisited(currentUserId);
+    const color = await checkColor(currentUserId);
     console.log(err);
+    res.render("index.ejs", {
+      users: users,
+      total: countries.length,
+      countries: countries,
+      color: color,
+      error: "Can't find the country. Please check the spelling and try agian",
+    })
   }
+  }
+  
 });
 
 // /user selection
 app.post("/user", async (req, res) => {
-  try {
-    const userSelection = req.body.user;
-    console.log(userSelection);
-    const countries = await checkVisited(userSelection);  
-    const result1 = await db.query(
-      "SELECT color FROM users WHERE id=$1",
-      [userSelection]);
-    const result2 = result1.rows;
-    const color = result2[0].color;
-    console.log(color);
-    res.render("index.ejs", {
-      countries: countries,
-      total: countries.length,
-      users: users,
-      color: color,
-    })
-  } catch (error) {
-    console.log(error);
-  }
-  
+    if (req.body.add === "new") {
+        res.render("new.ejs");
+    } else {
+      try {
+        const userSelection = req.body.user;
+        currentUserId = userSelection;
+        const color = await checkColor(userSelection);
+        // console.log(color);
+        const countries = await checkVisited(userSelection);
+        // console.log(countries);
+        res.render("index.ejs", {
+          total: countries.length,
+          countries: countries,
+          color: color,
+          users: users,
+        })
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
 });
 app.post("/new", async (req, res) => {
   //Hint: The RETURNING keyword can return the data that was inserted.
   //https://www.postgresql.org/docs/current/dml-returning.html
+  const username = req.body.name;
+  const color = req.body.color;
+  try {
+    const result = await db.query("INSERT INTO users(name, color) VALUES($1, $2) RETURNING *;",
+    [username, color]
+    );
+    currentUserId = result.rows[0].id ;
+    res.redirect("/");
+  } catch (error) {
+    console.log(error);
+  }
+
 });
 
 app.listen(port, () => {
