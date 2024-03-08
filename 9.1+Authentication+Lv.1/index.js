@@ -1,8 +1,11 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+import bcrypt from "bcrypt";
+
 const app = express();
 const port = 3000;
+const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
@@ -28,16 +31,24 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", async (req, res) => {
+  const email = req.body.username;
+  const password = req.body.password;
   try {
-    const email = req.body.username;
-    const password = req.body.password;
     const checkResult = await db.query("SELECT email from users WHERE email = $1;",[email]);
     if (checkResult.rows.length > 0) {
       res.send("Email already exists.");
     } else{
-      await db.query("INSERT INTO users(email, password) VALUES($1, $2);",[email,password]);
-      console.log("User registerd succesfully!");
-      res.redirect("/");
+      // password Hashing
+      bcrypt.hash(password, saltRounds, async(err, hash)=>{
+        if (err) {
+          console.log("Error hashing: " + err);
+        } else {
+          const insertResult = await db.query("INSERT INTO users(email, password) VALUES($1, $2);",[email,hash]);
+          console.log("registration done!");
+          res.redirect("/");
+        }
+      })
+      
     };
   } catch (err) {
     console.log(err);
@@ -50,19 +61,22 @@ app.post("/login", async (req, res) => {
   try {
     const checkResult = await db.query("SELECT * FROM users where email = $1", [email]);
     if (checkResult.rows.length > 0) {
-      const passwordFromDB = checkResult.rows[0].password;
-      if (passwordFromDB === password) {
-        console.log("Logged in!");
-        res.render("secrets.ejs");
-      } else {
-        res.send("Wrong password. Try again");
-      }
+      const storedHashedPassword = checkResult.rows[0].password;
+      bcrypt.compare(password, storedHashedPassword, (err, result) => {
+        if (err) {
+          console.log("Errer comparing passwords: " + err);
+        } else {
+          console.log(result);
+          if (result) {
+            res.render("secrets.ejs");
+          } else {
+            res.send("Wrong password. Try again");
+          }
+        }
+      })      
     } else {
       res.send("You have not registred yet");
     }
-    const result = await db.query("SELECT password FROM users WHERE email = $1",[email]);
-    const matchedPassword = result.rows[0].password;
-    
   } catch (error) {
      console.log(error);
   }
